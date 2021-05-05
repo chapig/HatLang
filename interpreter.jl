@@ -1,7 +1,5 @@
 hatsymbols = [ :hatprint, :hatint, :hatfloat, :hatstr ]
 
-stored_values = []
-
 function run_input()
     open("main.hat", "r") do io
         input_file = read(io, String) |> splitting |> init |> performline |> evalline
@@ -46,12 +44,12 @@ function performline(tasks::Array)
 end
 
 function evalline(hatArrayDone::Array)
-
     for each in hatArrayDone
         if each[1] isa Symbol && each[1] in hatsymbols 
             if each[1] === :hatprint hatprint(each) end
             if each[1] === :hatint hatint(each) end
             if each[1] === :hatfloat hatfloat(each) end
+            if each[1] === :hatstr hatstr(each) end
         end
     end
 
@@ -78,6 +76,15 @@ function hatfloat(item)
             expr =  "$name_of_variable = $value_of_variable"
             eval(Meta.parse(expr))
         end
+    end
+end
+
+function hatstr(item)
+    if item[2][2] == "="
+        name_of_variable = item[2][1] 
+        value_of_variable = join(item[2][3:end], " ")   
+        expr =  "$name_of_variable = $value_of_variable"
+        eval(Meta.parse(expr))
     end
 end
 
@@ -119,3 +126,5 @@ function isstr(line)
     end
     return false
 end
+
+a = run_input()
