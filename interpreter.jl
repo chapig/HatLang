@@ -1,4 +1,4 @@
-hatsymbols = [ :hatprint, :hatint, :hatfloat, :hatstr ]
+hatsymbols = [ :hatprint, :hatint, :hatfloat, :hatstr, :hatprintln]
 
 function run_input()
     open("main.hat", "r") do io
@@ -28,7 +28,7 @@ function performline(tasks::Array)
         for number_of_task in 1:length(tasks)
             for line in tasks[number_of_task]
                 if split(line)[1] == "print" push!(analisis, [:hatprint, split(line)[2:end]])
-
+                elseif split(line)[1] == "println" push!(analisis, [:hatprintln, split(line)[2:end]])
                 elseif isint(line) 
                     line = replace(line, "int::"=>"")
                     push!(analisis, [:hatint, split(line)[1:end]])
@@ -45,14 +45,11 @@ function performline(tasks::Array)
         return analisis
 
     catch LoadError 
-        printstyled("Error: Empty line detected\n", bold=true, color=:red)
+        printstyled("\nError: Empty line detected\n", bold=true, color=:red)
         print("HatLang is not yet capable of running with empty lines.")
     end
 
 end
-
-    
-
 
 function evalline(hatArrayDone::Array)
     for each in hatArrayDone
@@ -61,6 +58,7 @@ function evalline(hatArrayDone::Array)
             if each[1] === :hatint hatint(each) end
             if each[1] === :hatfloat hatfloat(each) end
             if each[1] === :hatstr hatstr(each) end
+            if each[1] === :hatprintln hatprintln(each) end
         end
     end
 
@@ -74,7 +72,7 @@ function hatint(item)
             expr =  "$name_of_variable = $value_of_variable"
             eval(Meta.parse(expr))
         else
-            printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+            printstyled("\nError: Incorrect declaration\n", bold=true, color=:red)
             print("$(item[2][3]) is not an Int value.")
         end
     end
@@ -88,7 +86,7 @@ function hatfloat(item)
             expr =  "$name_of_variable = $value_of_variable"
             eval(Meta.parse(expr))
         else
-            printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+            printstyled("\nError: Incorrect declaration\n", bold=true, color=:red)
             print("$(item[2][3]) is not a Float value.")
         end
     end
@@ -111,7 +109,7 @@ function hatstr(item)
                 eval(Meta.parse(expr))
             end
         catch LoadError
-            printstyled("Error: Syntax incomplete\n", bold=true, color=:red)
+            printstyled("\nError: Syntax incomplete\n", bold=true, color=:red)
             print("Unfinished string, \" missing at the end of the string.")
         end
     end
@@ -134,6 +132,23 @@ function hatprint(item)
 
 end
 
+function hatprintln(item)
+
+    item = join(item[2], " "); item = [i for i in item]
+    if item[1] == '\"' && item[end] == '\"'
+        println(replace(join(item), "\""=>""))
+    else
+        item = join(item)
+        try
+            expr = "println($item)"
+            eval(Meta.parse(expr))
+        catch
+            printstyled("Error: Not declared variable", bold=true, color=:red)
+            println("$item has not been declared.")
+        end
+    end
+
+end
 
 #Declaration of variables.
 function isint(line)
