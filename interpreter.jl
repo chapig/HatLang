@@ -51,7 +51,8 @@ function performline(tasks::Array)
 
 end
 
-function evalline(hatArrayDone::Array)
+function evalline(hatArrayDone)
+
     for each in hatArrayDone
         if each[1] isa Symbol && each[1] in hatsymbols 
             if each[1] === :hatprint hatprint(each) end
@@ -125,7 +126,7 @@ function hatprint(item)
             expr = "print($item)"
             eval(Meta.parse(expr))
         catch
-            printstyled("Error: Not declared variable", bold=true, color=:red)
+            printstyled("Error: Not declared variable\n", bold=true, color=:red)
             print("$item has not been declared.")
         end
     end
