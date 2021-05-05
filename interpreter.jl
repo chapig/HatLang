@@ -24,24 +24,35 @@ end
 function performline(tasks::Array)
     
     analisis = []
-    for number_of_task in 1:length(tasks)
-        for line in tasks[number_of_task]
-            if split(line)[1] == "print" push!(analisis, [:hatprint, split(line)[2:end]])
+    try
+        for number_of_task in 1:length(tasks)
+            for line in tasks[number_of_task]
+                if split(line)[1] == "print" push!(analisis, [:hatprint, split(line)[2:end]])
 
-            elseif isint(line) 
-                line = replace(line, "int::"=>"")
-                push!(analisis, [:hatint, split(line)[1:end]])
-            elseif isfloat(line)
-                line = replace(line, "float::"=>"")
-                push!(analisis, [:hatfloat, split(line)[1:end]])
-            elseif isstr(line)
-                line = replace(line, "str::"=>"")
-                push!(analisis, [:hatstr, split(line)[1:end]])
+                elseif isint(line) 
+                    line = replace(line, "int::"=>"")
+                    push!(analisis, [:hatint, split(line)[1:end]])
+                elseif isfloat(line)
+                    line = replace(line, "float::"=>"")
+                    push!(analisis, [:hatfloat, split(line)[1:end]])
+                elseif isstr(line)
+                    line = replace(line, "str::"=>"")
+                    push!(analisis, [:hatstr, split(line)[1:end]])
+                end
             end
         end
+
+        return analisis
+
+    catch LoadError 
+        printstyled("Error: Empty line detected\n", bold=true, color=:red)
+        print("HatLang is not yet capable of running with empty lines.")
     end
-    return analisis
+
 end
+
+    
+
 
 function evalline(hatArrayDone::Array)
     for each in hatArrayDone
@@ -63,7 +74,8 @@ function hatint(item)
             expr =  "$name_of_variable = $value_of_variable"
             eval(Meta.parse(expr))
         else
-            @error "$(item[2][3]) is not Float"
+            printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+            print("$(item[2][3]) is not an Int value.")
         end
     end
 end
@@ -75,6 +87,9 @@ function hatfloat(item)
         if value_of_variable !== nothing          
             expr =  "$name_of_variable = $value_of_variable"
             eval(Meta.parse(expr))
+        else
+            printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+            print("$(item[2][3]) is not a Float value.")
         end
     end
 end
@@ -82,9 +97,23 @@ end
 function hatstr(item)
     if item[2][2] == "="
         name_of_variable = item[2][1] 
-        value_of_variable = join(item[2][3:end], " ")   
-        expr =  "$name_of_variable = $value_of_variable"
-        eval(Meta.parse(expr))
+        value_of_variable = join(item[2][3:end], " ")
+        try
+
+            if tryparse(Int, value_of_variable) !== nothing
+                printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+                print("$value_of_variable is not a string.") 
+            elseif tryparse(Float64, value_of_variable) !== nothing
+                printstyled("Error: Incorrect declaration\n", bold=true, color=:red)
+                print("$value_of_variable is not a string.")
+            else
+                expr =  "$name_of_variable = $value_of_variable"
+                eval(Meta.parse(expr))
+            end
+        catch LoadError
+            printstyled("Error: Syntax incomplete\n", bold=true, color=:red)
+            print("Unfinished string, \" missing at the end of the string.")
+        end
     end
 end
 
@@ -98,7 +127,8 @@ function hatprint(item)
             expr = "print($item)"
             eval(Meta.parse(expr))
         catch
-            @error "$item has not been declared."
+            printstyled("Error: Not declared variable", bold=true, color=:red)
+            print("$item has not been declared.")
         end
     end
 
@@ -126,5 +156,3 @@ function isstr(line)
     end
     return false
 end
-
-a = run_input()
