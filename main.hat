@@ -1,4 +1,2 @@
-str::hola = "Hola, cómo estás"
-int::x = 597
-println hola
-println x
+a = 'a';
+n = "hola";
