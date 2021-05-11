@@ -1,31 +1,53 @@
+function is_a_string_or_char(chars, isachar, isastring)
+    if isachar ≡ nothing && isastring ≢ nothing
+        string_or_char = ""
+        next = findnext('"', chars, isastring+1)
+        if next ≢ nothing
+            string_or_char *= chars[isastring:next]
+            return [string_or_char, length(string_or_char)]
+        else 
+            return nothing
+        end
+    elseif isastring ≡ nothing && isachar ≢ nothing
+        string_or_char = ""
+        next = findnext('\'', chars, isachar+1)
+        if next ≢ nothing
+            string_or_char *= chars[isachar:next]
+            return [string_or_char, length(string_or_char)]
+        else 
+            return nothing
+        end
+    elseif isastring ≢ nothing && isachar ≢ nothing
+        if isastring < isachar
+            string_or_char = ""
+            next = findnext('"', chars, isastring+1)
+            if next ≢ nothing
+                string_or_char *= chars[isastring:next]
+                return [string_or_char, length(string_or_char)]
+            else 
+                return nothing
+            end
+        else
+            string_or_char = ""
+            next = findnext('\'', chars, isachar+1)
+            if next ≢ nothing
+                string_or_char *= chars[isachar:next]
+                return [string_or_char, length(string_or_char)]
+            else 
+                return nothing
+            end
+        end
+    end
+end
+
+
 function scan_string(delim, chars)
 
     chars = chars[delim:end]
     isastring = findfirst('"', chars)
     isachar = findfirst('\'', chars)
+    return is_a_string_or_char(chars, isachar, isastring)
 
-    if isastring ≢ nothing
-        string_or_char = ""
-        next = findnext('"', chars, isastring+1)
-        if next ≢ nothing
-            string_or_char *= chars[isastring:next]
-            return [string_or_char, (isastring, next)]
-        else 
-            return nothing
-        end
-    end
-
-    if isachar ≢ nothing
-        string_or_char = ""
-        next = findnext('\'', chars, isachar+1)
-        if next ≢ nothing
-            string_or_char *= chars[isachar:next]
-            return [string_or_char, (isachar, next)]
-        else 
-            return nothing
-        end
-    end
-    
 end
 
 function lex(file::AbstractString)
@@ -67,7 +89,7 @@ function lex(file::AbstractString)
                 string_or_char = scan_string(indexchar, chars)
                 if string_or_char ≢ nothing
                     push!(lexr, string_or_char[1])
-                    indexchar += length(string_or_char[2][1]:string_or_char[2][2])
+                    indexchar += string_or_char[2]
                     continue
                 else
                     error = true
@@ -82,8 +104,15 @@ function lex(file::AbstractString)
             end
         end
 
-        if error println("An error has occurred, check grammar.") 
-        else 
+        
+
+        if error
+            println("Last index of string scanned was: $indexchar of $(length(chars))")
+            println("An error has occurred, check grammar.")
+            println("Unfinished lexicon: \n$lexr")
+            println("Chars and unfinished lexicon will be returned (Vector) in order to be debugged.")
+            return [chars, lexr]
+        else
             println("Last index of string scanned was: $indexchar of $(length(chars))")
             return lexr 
         end
